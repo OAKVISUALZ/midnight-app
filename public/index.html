@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>midnight-app — Zero-Knowledge Message Store on Midnight</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: #0d1117; color: #c9d1d9; line-height: 1.6;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    h1 span { color: #58a6ff; }
+    .subtitle { color: #8b949e; margin-bottom: 2rem; font-size: 1.05rem; }
+    h2 { font-size: 1.3rem; margin: 2rem 0 0.75rem; color: #f0f6fc; }
+    p { margin-bottom: 1rem; color: #c9d1d9; }
+    code {
+      background: #161b22; padding: 0.15em 0.4em; border-radius: 4px;
+      font-size: 0.9em; color: #f0f6fc;
+    }
+    pre {
+      background: #161b22; padding: 1rem; border-radius: 6px;
+      overflow-x: auto; margin: 1rem 0;
+    }
+    pre code { background: none; padding: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .card {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 1.25rem; transition: border-color 0.2s;
+    }
+    .card:hover { border-color: #58a6ff; }
+    .card h3 { font-size: 1rem; color: #f0f6fc; margin-bottom: 0.5rem; }
+    .card p { font-size: 0.875rem; color: #8b949e; margin: 0; }
+    .badge {
+      display: inline-block; background: #1f6feb22; color: #58a6ff;
+      padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.8rem;
+      border: 1px solid #1f6feb44;
+    }
+    .footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #30363d; color: #8b949e; font-size: 0.875rem; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><span>midnight-app</span></h1>
+    <p class="subtitle">
+      A zero-knowledge message store deployed on the
+      <a href="https://midnight.network">Midnight Network</a>.
+      Messages are sanitized via a native witness, validated in-circuit,
+      and stored on-chain — all under a privacy-preserving ZK proof.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Sanitize Witness</h3>
+        <p>Whitespace trimming runs natively via a TypeScript witness, avoiding inefficient in-circuit string operations.</p>
+      </div>
+      <div class="card">
+        <h3>Length Validation</h3>
+        <p>Messages are enforced to be at most 100 characters inside the zero-knowledge circuit.</p>
+      </div>
+      <div class="card">
+        <h3>Local Devnet</h3>
+        <p>Bundle your own devnet (node, indexer, proof-server) via included <code>docker-compose.yml</code>.</p>
+      </div>
+      <div class="card">
+        <h3>Multi-Network</h3>
+        <p>Deploy to local devnet, Preview, or Preprod testnets with a single flag.</p>
+      </div>
+    </div>
+
+    <h2>Smart Contract</h2>
+    <p>The Compact contract exposes a single public ledger field and one circuit.</p>
+    <pre><code>pragma language_version >= 0.23;
+
+import CompactStandardLibrary;
+
+export ledger message: Opaque&lt;"string"&gt;;
+
+witness sanitizeMessage(raw: Opaque&lt;"string"&gt;): Opaque&lt;"string"&gt;;
+
+export circuit storeMessage(raw: Opaque&lt;"string"&gt;): [] {
+    let clean: Opaque&lt;"string"&gt; = sanitizeMessage(raw);
+    assert(clean.length() &lt;= 100);
+    message = disclose(clean);
+}</code></pre>
+
+    <h2>Architecture</h2>
+    <p>
+      The <code>sanitizeMessage</code> witness is implemented in TypeScript
+      and injected at deployment time. The circuit calls the witness,
+      validates the output length, and commits the result to the ledger
+      via <code>disclose</code>. This keeps string manipulation out of the
+      circuit while retaining full on-chain verifiability.
+    </p>
+
+    <h2>Quick Start</h2>
+    <pre><code>npm install
+npm run setup
+npm run cli</code></pre>
+
+    <p>
+      <span class="badge">Midnight Network</span>
+      <span class="badge" style="margin-left:0.5rem">Zero-Knowledge</span>
+      <span class="badge" style="margin-left:0.5rem">TypeScript</span>
+      <span class="badge" style="margin-left:0.5rem">Compact</span>
+    </p>
+
+    <div class="footer">
+      <p>
+        Built with the <a href="https://github.com/midnight-ntwrk">Midnight SDK</a>.
+        Source available on <a href="https://github.com">GitHub</a>.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
