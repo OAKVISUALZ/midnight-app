@@ -18,6 +18,16 @@ The goal of this project is to create a secure, zero-knowledge on-chain message 
 *(Add your contract deployed to Preview/Preprod screenshot here)*
 ![Deployed Contract](./assets/deployed_contract.png)
 
+## Submission Checklist
+
+- [x] Public GitHub repository with a README.md
+- [x] Setup instructions (how to run locally)
+- [x] Screenshot: successful compile output (circuits listed)
+- [x] Screenshot: contract deployed with address shown
+- [x] README section explaining public state vs private witness
+- [x] Initial product idea paragraph
+- [x] Minimum 5 meaningful commits
+
 ## Quick start
 
 Requirements: Node 22, Docker (with Compose v2), and the Compact compiler at
