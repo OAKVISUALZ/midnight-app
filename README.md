@@ -4,6 +4,20 @@ A Midnight Network smart contract that stores messages on-chain with a
 `sanitizeMessage` witness that trims whitespace and enforces a maximum
 message length of 100 characters.
 
+## Initial Product Idea
+
+The goal of this project is to create a secure, zero-knowledge on-chain message store. It serves as a foundational building block for applications that require privacy-preserving data logging on the Midnight Network. The contract enforces data constraints (like message length and format) using zk-SNARKs via the `sanitizeMessage` witness, ensuring that only valid and properly formatted messages are stored without revealing the underlying validation process to the public ledger.
+
+## Screenshots
+
+### Compile Output
+*(Add your successful compile output screenshot here)*
+![Compile Output](./assets/compile_output.png)
+
+### Deployed Contract
+*(Add your contract deployed to Preview/Preprod screenshot here)*
+![Deployed Contract](./assets/deployed_contract.png)
+
 ## Quick start
 
 Requirements: Node 22, Docker (with Compose v2), and the Compact compiler at
