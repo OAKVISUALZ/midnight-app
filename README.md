@@ -4,6 +4,8 @@ A Midnight Network smart contract that stores messages on-chain with a
 `sanitizeMessage` witness that trims whitespace and enforces a maximum
 message length of 100 characters.
 
+**Live Demo:** [https://midnight-app-zk.netlify.app/](https://midnight-app-zk.netlify.app/)
+
 ## Initial Product Idea
 
 The goal of this project is to create a secure, zero-knowledge on-chain message store. It serves as a foundational building block for applications that require privacy-preserving data logging on the Midnight Network. The contract enforces data constraints (like message length and format) using zk-SNARKs via the `sanitizeMessage` witness, ensuring that only valid and properly formatted messages are stored without revealing the underlying validation process to the public ledger.
@@ -17,6 +19,9 @@ The goal of this project is to create a secure, zero-knowledge on-chain message 
 ### Deployed Contract
 *(Add your contract deployed to Preview/Preprod screenshot here)*
 ![Deployed Contract](./assets/deployed_contract.png)
+
+### Live Demo
+![Live Demo](./assets/live_demo.png)
 
 ## Submission Checklist
 
