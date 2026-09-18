@@ -77,11 +77,21 @@ jobs:
         if: inputs.network != 'undeployed'
         env:
           SEED_SECRET: ${{ secrets.MIDNIGHT_WALLET_SEED }}
+          NETWORK: ${{ inputs.network }}
         run: |
           if [ -z "$SEED_SECRET" ]; then
             echo "::error title=Missing secret::MIDNIGHT_WALLET_SEED is required for ${{ inputs.network }}. Add a funded wallet seed as a repository secret, then re-run."
             exit 1
           fi
+          ADDR=$(npx tsx scripts/derive-address.ts "$SEED_SECRET" "$NETWORK")
+          if [ "$NETWORK" = "preview" ]; then FAUCET="https://faucet.preview.midnight.network"; else FAUCET="https://faucet.preprod.midnight.network"; fi
+          echo "Network:      $NETWORK"
+          echo "Wallet seed:  set (repository secret MIDNIGHT_WALLET_SEED)"
+          echo "Address:      $ADDR"
+          echo "Faucet:       $FAUCET"
+          echo "The faucet requires a human-captcha; if this wallet has no tNIGHT yet,"
+          echo "open the faucet, paste the address above, and request tokens. The deploy"
+          echo "step below polls for the balance and proceeds once funds land."
 
       - name: Deploy contract
         env:
