@@ -138,7 +138,7 @@ jobs:
               console.error("README marker not found: " + marker);
               process.exit(1);
             }
-            const value = "`" + process.env.ADDRESS + "` (" + process.env.NETWORK + ", verified " + new Date().toISOString().slice(0, 10) + ")";
+            const value = process.env.ADDRESS + " (" + process.env.NETWORK + ", verified " + new Date().toISOString().slice(0, 10) + ")";
             fs.writeFileSync("README.md", readme.replace(marker, value));
           '
 
