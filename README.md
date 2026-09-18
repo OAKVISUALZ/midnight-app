@@ -12,7 +12,7 @@ message length of 100 characters.
 
 | Network | Contract address | Deployed |
 | --- | --- | --- |
-| `undeployed` | `a89649b0cf9de19075357aa08261bb6e2e1ff53e432302c8098ff91c153a901d` | 2026-09-18 |
+| `undeployed` | `521c703613ade3eb172b4f4fcdd779b4e29c8c26efae8c6888a5c6d95799030a` | 2026-09-18 |
 
 <!-- LIVE-DEPLOYMENTS-END -->
 
