@@ -10,7 +10,7 @@ message length of 100 characters.
 
 | Network | Contract address |
 | --- | --- |
-| `undeployed` | `<!-- DEPLOYED-CONTRACT-ADDRESS -->` |
+| `undeployed` | ``a89649b0cf9de19075357aa08261bb6e2e1ff53e432302c8098ff91c153a901d` (undeployed, verified 2026-09-18)` |
 
 The contract is compiled and deployed by the **Compile and deploy** GitHub
 Actions workflow, which verifies the deployment with `npm run test:e2e` and
