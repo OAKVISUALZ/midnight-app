@@ -7,7 +7,7 @@ export ledger message: Opaque<"string">;
 witness sanitizeMessage(raw: Opaque<"string">): Opaque<"string">;
 
 export circuit storeMessage(raw: Opaque<"string">): [] {
-    let clean: Opaque<"string"> = sanitizeMessage(raw);
+    const clean: Opaque<"string"> = sanitizeMessage(raw);
     assert(clean.length() <= 100);
     message = disclose(clean);
 }
