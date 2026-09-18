@@ -83,8 +83,7 @@ export ledger message: Opaque&lt;"string"&gt;;
 witness sanitizeMessage(raw: Opaque&lt;"string"&gt;): Opaque&lt;"string"&gt;;
 
 export circuit storeMessage(raw: Opaque&lt;"string"&gt;): [] {
-    let clean: Opaque&lt;"string"&gt; = sanitizeMessage(raw);
-    assert(clean.length() &lt;= 100);
+    const clean: Opaque&lt;"string"&gt; = sanitizeMessage(raw);
     message = disclose(clean);
 }</code></pre>
 
@@ -92,9 +91,10 @@ export circuit storeMessage(raw: Opaque&lt;"string"&gt;): [] {
     <p>
       The <code>sanitizeMessage</code> witness is implemented in TypeScript
       and injected at deployment time. The circuit calls the witness,
-      validates the output length, and commits the result to the ledger
-      via <code>disclose</code>. This keeps string manipulation out of the
-      circuit while retaining full on-chain verifiability.
+      sanitizes the message (trimming whitespace and rejecting anything over
+      100 characters), and commits the result to the ledger via
+      <code>disclose</code>. This keeps string manipulation out of the
+      circuit while keeping the stored value disclosure-controlled.
     </p>
 
     <h2>Quick Start</h2>

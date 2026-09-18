@@ -8,6 +8,5 @@ witness sanitizeMessage(raw: Opaque<"string">): Opaque<"string">;
 
 export circuit storeMessage(raw: Opaque<"string">): [] {
     const clean: Opaque<"string"> = sanitizeMessage(raw);
-    assert(clean.length() <= 100);
     message = disclose(clean);
 }

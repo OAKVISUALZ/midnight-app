@@ -46,7 +46,11 @@ const HelloWorld = await import(pathToFileURL(contractPath).href);
 
 const witnesses = {
   sanitizeMessage: (context: any, raw: string) => {
-    return [context.privateState, raw.trim()];
+    const clean = raw.trim();
+    if (clean.length > 100) {
+      throw new Error('Message exceeds 100 characters');
+    }
+    return [context.privateState, clean];
   },
 };
 

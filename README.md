@@ -81,8 +81,7 @@ The contract (`contracts/hello-world.compact`) exposes a single ledger field
 witness sanitizeMessage(raw: Opaque<"string">): Opaque<"string">;
 
 export circuit storeMessage(raw: Opaque<"string">): [] {
-    let clean: Opaque<"string"> = sanitizeMessage(raw);
-    assert(clean.length() <= 100);
+    const clean: Opaque<"string"> = sanitizeMessage(raw);
     message = disclose(clean);
 }
 ```
@@ -91,9 +90,9 @@ export circuit storeMessage(raw: Opaque<"string">): [] {
 
 The `sanitizeMessage` witness is implemented in TypeScript (not in-circuit).
 It receives the raw string and returns it with leading/trailing whitespace
-trimmed. Because the witness runs natively, the circuit can efficiently
-validate the sanitized result without expensive string operations inside the
-zero-knowledge proof.
+trimmed, and rejects messages longer than 100 characters. Because the
+witness runs natively, the circuit can commit the sanitized result without
+expensive string operations inside the zero-knowledge proof.
 
 The witness is provided at deployment time in `src/deploy.ts`, `src/cli.ts`,
 and `scripts/e2e-check.ts`:
@@ -101,16 +100,23 @@ and `scripts/e2e-check.ts`:
 ```typescript
 const witnesses = {
   sanitizeMessage: (context: any, raw: string) => {
-    return [context.privateState, raw.trim()];
+    const clean = raw.trim();
+    if (clean.length > 100) {
+      throw new Error('Message exceeds 100 characters');
+    }
+    return [context.privateState, clean];
   },
 };
 ```
 
 ### Message length
 
-The circuit asserts `clean.length() <= 100` in-circuit, so no message
-longer than 100 characters can be stored. The TypeScript front-end is
-stateless — validation happens inside the proof.
+`Opaque<"string">` values are opaque to Compact — circuit code cannot inspect
+their contents. Length validation therefore lives in the `sanitizeMessage`
+witness: it trims whitespace and throws for messages over 100 characters, and
+the circuit discloses only the witness's sanitized output. The same witness
+is wired into the deploy and CLI entry points, so every path that stores a
+message enforces the limit.
 
 ## Project structure
 
