@@ -134,22 +134,28 @@ jobs:
             );
           '
 
-      - name: Update README with deployed address
+      - name: Update README with deployed addresses
         if: inputs.commit-artifacts == true
         env:
           NETWORK: ${{ inputs.network }}
-          ADDRESS: ${{ steps.deployment-record.outputs.address }}
         run: |
           node -e '
             const fs = require("fs");
-            const marker = "<!-- DEPLOYED-CONTRACT-ADDRESS -->";
+            const start = "<!-- LIVE-DEPLOYMENTS-START -->";
+            const end = "<!-- LIVE-DEPLOYMENTS-END -->";
+            const state = JSON.parse(fs.readFileSync(".midnight-state.json", "utf8"));
+            const rows = Object.entries(state.deployments)
+              .sort()
+              .map(([n, d]) => "| `" + n + "` | `" + d.address + "` | " + String(d.deployedAt).slice(0, 10) + " |");
+            const block = start + "\n\n| Network | Contract address | Deployed |\n| --- | --- | --- |\n" + rows.join("\n") + "\n\n" + end;
             let readme = fs.readFileSync("README.md", "utf8");
-            if (!readme.includes(marker)) {
-              console.error("README marker not found: " + marker);
+            if (!readme.includes(start) || !readme.includes(end)) {
+              console.error("Live-deployment markers not found in README: " + start);
               process.exit(1);
             }
-            const value = process.env.ADDRESS + " (" + process.env.NETWORK + ", verified " + new Date().toISOString().slice(0, 10) + ")";
-            fs.writeFileSync("README.md", readme.replace(marker, value));
+            readme = readme.slice(0, readme.indexOf(start)) + block + readme.slice(readme.indexOf(end) + end.length);
+            fs.writeFileSync("README.md", readme);
+            console.log("README updated: " + rows.length + " deployment(s) listed");
           '
 
       - name: Commit generated artifacts

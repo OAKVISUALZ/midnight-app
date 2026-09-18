@@ -8,13 +8,17 @@ message length of 100 characters.
 
 ## Live Deployment
 
-| Network | Contract address |
-| --- | --- |
-| `undeployed` | `a89649b0cf9de19075357aa08261bb6e2e1ff53e432302c8098ff91c153a901d` (undeployed, verified 2026-09-18) |
+<!-- LIVE-DEPLOYMENTS-START -->
+
+| Network | Contract address | Deployed |
+| --- | --- | --- |
+| `undeployed` | `a89649b0cf9de19075357aa08261bb6e2e1ff53e432302c8098ff91c153a901d` | 2026-09-18 |
+
+<!-- LIVE-DEPLOYMENTS-END -->
 
 The contract is compiled and deployed by the **Compile and deploy** GitHub
 Actions workflow, which verifies the deployment with `npm run test:e2e` and
-commits the generated `contracts/managed/` artifacts plus this address back to
+commits the generated `contracts/managed/` artifacts plus this table back to
 the repository. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full record.
 
 ## Initial Product Idea
@@ -153,11 +157,25 @@ npm run cli
 
 ### Public testnet (preview / preprod)
 
+Deploying to a public testnet requires a wallet **funded with test coins**,
+because the public faucets are behind a human captcha:
+
 ```bash
-npm run setup -- --network preview
-# Fund wallet from faucet when prompted
+# 1) pick a persistent wallet seed (any 64-char hex string) and fund it:
+npx tsx scripts/derive-address.ts <seed-hex-64> preview   # prints the address to fund
+#    open https://faucet.preview.midnight.network and request tokens for that address
+
+# 2) deploy interactively with the funded seed:
+MIDNIGHT_WALLET_SEED=<seed-hex-64> npm run setup -- --network preview
 npm run cli
 ```
+
+The **Compile and deploy** GitHub Actions workflow automates the same flow for
+`preview` / `preprod`: it requires a repository secret
+`MIDNIGHT_WALLET_SEED` (Settings → Secrets and variables → Actions), prints
+the derived fundable address in the run log, and only needs the wallet to be
+funded (once) for the deployment to go through. Trigger it from the Actions
+tab with `network: preview` or `network: preprod`.
 
 ### Netlify (static landing page)
 
@@ -187,8 +205,8 @@ npx netlify deploy --prod --dir=public
 | Network     | Use case                                                                    | Default |
 | ----------- | --------------------------------------------------------------------------- | ------- |
 | `undeployed`| Local devnet (`docker-compose.yml`). Genesis seed is hardcoded.             | yes     |
-| `preview`   | Public preview testnet ([faucet](https://midnight-tmnight-preview.nethermind.dev)). |         |
-| `preprod`   | Public preprod testnet ([faucet](https://midnight-tmnight-preprod.nethermind.dev)).  |         |
+| `preview`   | Public preview testnet ([faucet](https://faucet.preview.midnight.network)).          |         |
+| `preprod`   | Public preprod testnet ([faucet](https://faucet.preprod.midnight.network)).          |         |
 
 The active network is **sticky** — switch with `--network <name>` or
 `npm run network <name>`.
