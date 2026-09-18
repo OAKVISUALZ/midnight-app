@@ -102,7 +102,7 @@ jobs:
             const state = JSON.parse(fs.readFileSync(".midnight-state.json", "utf8"));
             const dep = state.deployments[process.env.NETWORK];
             if (!dep) { console.error("No deployment record for " + process.env.NETWORK); process.exit(1); }
-            console.log(dep);
+            process.stdout.write(JSON.stringify(dep, null, 2) + "\n");
           ' | tee deployment-record.json
           echo "address=$(node -e 'const dep=require("./deployment-record.json"); process.stdout.write(dep.address)')" >> "$GITHUB_OUTPUT"
 
