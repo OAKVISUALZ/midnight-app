@@ -6,6 +6,17 @@ message length of 100 characters.
 
 **Live Demo:** [https://midnight-app-zk.netlify.app/](https://midnight-app-zk.netlify.app/)
 
+## Live Deployment
+
+| Network | Contract address |
+| --- | --- |
+| `undeployed` | `<!-- DEPLOYED-CONTRACT-ADDRESS -->` |
+
+The contract is compiled and deployed by the **Compile and deploy** GitHub
+Actions workflow, which verifies the deployment with `npm run test:e2e` and
+commits the generated `contracts/managed/` artifacts plus this address back to
+the repository. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full record.
+
 ## Initial Product Idea
 
 The goal of this project is to create a secure, zero-knowledge on-chain message store. It serves as a foundational building block for applications that require privacy-preserving data logging on the Midnight Network. The contract enforces data constraints (like message length and format) using zk-SNARKs via the `sanitizeMessage` witness, ensuring that only valid and properly formatted messages are stored without revealing the underlying validation process to the public ledger.
@@ -13,11 +24,9 @@ The goal of this project is to create a secure, zero-knowledge on-chain message 
 ## Screenshots
 
 ### Compile Output
-*(Add your successful compile output screenshot here)*
 ![Compile Output](./assets/compile_output.png)
 
 ### Deployed Contract
-*(Add your contract deployed to Preview/Preprod screenshot here)*
 ![Deployed Contract](./assets/deployed_contract.png)
 
 ### Live Demo

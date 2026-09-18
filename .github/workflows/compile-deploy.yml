@@ -1,0 +1,157 @@
+name: Compile and deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: Mid-night network to compile against and deploy to
+        type: choice
+        required: true
+        default: undeployed
+        options:
+          - undeployed
+          - preview
+          - preprod
+      commit-artifacts:
+        description: Commit the compiled managed/ artifacts and deployment record back to the repo
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: compile-deploy-${{ inputs.network }}
+  cancel-in-progress: false
+
+jobs:
+  compile-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Compact developer tools
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          echo "$HOME/.compact/bin" >> "$GITHUB_PATH"
+
+      # Adjust via repository variable COMPACT_TOOLCHAIN_VERSION (Settings →
+      # Secrets and variables → Actions) if the runtime reports a version
+      # mismatch with the generated artifacts. 0.30.0+ targets Midnight ledger v8,
+      # which matches the pinned proof-server/node/images in docker-compose.yml.
+      - name: Install Compact toolchain
+        run: compact update "${{ vars.COMPACT_TOOLCHAIN_VERSION || '0.30.0' }}"
+
+      - name: Show toolchain versions
+        run: |
+          compact --version
+          compact compile --version
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start devnet
+        run: |
+          if [ "${{ inputs.network }}" = "undeployed" ]; then
+            docker compose up -d --wait
+          else
+            docker compose up -d --wait proof-server
+          fi
+
+      - name: Compile contract
+        run: npm run compile
+
+      - name: List compiled artifacts
+        run: find contracts/managed -maxdepth 3 -type f | sort
+
+      - name: Require funded wallet seed for public networks
+        if: inputs.network != 'undeployed'
+        env:
+          SEED_SECRET: ${{ secrets.MIDNIGHT_WALLET_SEED }}
+        run: |
+          if [ -z "$SEED_SECRET" ]; then
+            echo "::error title=Missing secret::MIDNIGHT_WALLET_SEED is required for ${{ inputs.network }}. Add a funded wallet seed as a repository secret, then re-run."
+            exit 1
+          fi
+
+      - name: Deploy contract
+        env:
+          MIDNIGHT_WALLET_SEED: ${{ secrets.MIDNIGHT_WALLET_SEED }}
+          MIDNIGHT_FAUCET_TIMEOUT_MS: 600000
+        run: npm run deploy -- --network=${{ inputs.network }}
+
+      - name: Verify deployment end-to-end
+        run: npm run test:e2e -- --network=${{ inputs.network }}
+
+      - name: Capture deployment record
+        id: deployment-record
+        env:
+          NETWORK: ${{ inputs.network }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const state = JSON.parse(fs.readFileSync(".midnight-state.json", "utf8"));
+            const dep = state.deployments[process.env.NETWORK];
+            if (!dep) { console.error("No deployment record for " + process.env.NETWORK); process.exit(1); }
+            console.log(dep);
+          ' | tee deployment-record.json
+          echo "address=$(node -e 'const dep=require("./deployment-record.json"); process.stdout.write(dep.address)')" >> "$GITHUB_OUTPUT"
+
+      - name: Write DEPLOYMENT.md
+        if: inputs.commit-artifacts == true
+        env:
+          NETWORK: ${{ inputs.network }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const dep = require("./deployment-record.json");
+            fs.writeFileSync("DEPLOYMENT.md",
+              "# Deployment record\n\n" +
+              "- Network: `" + process.env.NETWORK + "`\n" +
+              "- Contract address: `" + dep.address + "`\n" +
+              "- Deployer: `" + dep.deployer + "`\n" +
+              "- Deployed at: " + dep.deployedAt + "\n" +
+              "- Verified by: `npm run test:e2e` (passed in the `Compile and deploy` workflow)\n"
+            );
+          '
+
+      - name: Update README with deployed address
+        if: inputs.commit-artifacts == true
+        env:
+          NETWORK: ${{ inputs.network }}
+          ADDRESS: ${{ steps.deployment-record.outputs.address }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const marker = "<!-- DEPLOYED-CONTRACT-ADDRESS -->";
+            let readme = fs.readFileSync("README.md", "utf8");
+            if (!readme.includes(marker)) {
+              console.error("README marker not found: " + marker);
+              process.exit(1);
+            }
+            const value = "`" + process.env.ADDRESS + "` (" + process.env.NETWORK + ", verified " + new Date().toISOString().slice(0, 10) + ")";
+            fs.writeFileSync("README.md", readme.replace(marker, value));
+          '
+
+      - name: Commit generated artifacts
+        if: inputs.commit-artifacts == true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f contracts/managed
+          git add DEPLOYMENT.md README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: commit compiled managed/ artifacts and deployment record for ${{ inputs.network }} [skip ci]"
+            git push
+          else
+            echo "No changes to commit"
+          fi
